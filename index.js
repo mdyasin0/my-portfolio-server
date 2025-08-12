@@ -33,6 +33,51 @@ async function run() {
 }
 run().catch(console.dir);
 
+
+const nodemailer = require("nodemailer");
+
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",  
+  auth: {
+    user: process.env.EMAIL_USER,      
+    pass: process.env.EMAIL_PASS,      
+  },
+});
+
+
+app.post("/send-email", async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: "fill all field।" });
+  }
+
+  const mailOptions = {
+    from: email, 
+    to: process.env.EMAIL_USER,
+    subject: `New message from portfolio contact form by ${name}`,
+    text: `
+Name: ${name}
+Email: ${email}
+
+Message:
+${message}
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "email sent" });
+  } catch (error) {
+    console.error("Email sending error:", error);
+    res.status(500).json({ message: "something went wrong" });
+  }
+});
+
+
+
+
 const { ObjectId } = require('mongodb');
 // GET project by ID
 app.get('/projects/:id', async (req, res) => {
